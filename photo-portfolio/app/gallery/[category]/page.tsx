@@ -13,11 +13,11 @@ const galleryData = {
   portraits: { title: 'Portraits', prefix: 'portraits/' },
 }
 
-export default async function GalleryPage({
-  params,
-}: {
-  params: { category: string }
-}) {
+interface GalleryPageProps {
+  params: Promise<{ category: string }>
+}
+
+export default async function GalleryPage({ params }: GalleryPageProps) {
   const { category } = await params
 
   const galleryKey = category as keyof typeof galleryData
