@@ -43,7 +43,7 @@ export async function GalleryPreview() {
           {previewsWithUrls.map((gallery) => (
             <Card key={gallery.title} className="overflow-hidden">
               <CardContent className="p-0">
-                <div className="relative aspect-[3/2] w-full h-[200px] md:h-[250px]">
+                <div className="relative aspect-[3/2] w-full h-[250px]">
                   <Image
                     src={gallery.image || '/placeholder.svg'}
                     alt={gallery.alt}
