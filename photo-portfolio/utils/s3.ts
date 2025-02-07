@@ -1,5 +1,4 @@
-import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3"
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3"
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION!,
@@ -10,22 +9,7 @@ const s3Client = new S3Client({
 })
 
 const S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME!
-
-export async function getSignedS3Url(key: string) {
-  const command = new GetObjectCommand({
-    Bucket: S3_BUCKET_NAME,
-    Key: key,
-  })
-
-  try {
-    // URL expires in 1 hour
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 })
-    return signedUrl
-  } catch (error) {
-    console.error("Error generating signed URL:", error)
-    return null
-  }
-}
+const CLOUDFRONT_URL = `https://${process.env.CLOUDFRONT_DOMAIN}`
 
 function isImageFile(filename: string): boolean {
   const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"]
@@ -40,16 +24,24 @@ export async function listS3Objects(prefix: string) {
 
   try {
     const data = await s3Client.send(command)
-    const objects = await Promise.all(
-      data.Contents?.filter((object) => !object.Key!.endsWith("/") && isImageFile(object.Key!)).map(async (object) => ({
-        key: object.Key!,
-        url: await getSignedS3Url(object.Key!),
-      })) || [],
-    )
-    return objects.filter((object) => object.url !== null)
+    if (!data.Contents) {
+      console.warn(`No objects found in bucket ${S3_BUCKET_NAME} with prefix ${prefix}`)
+      return []
+    }
+    const objects = data.Contents.filter(
+      (object) => object.Key && !object.Key.endsWith("/") && isImageFile(object.Key),
+    ).map((object) => ({
+      key: object.Key!,
+      url: `${CLOUDFRONT_URL}/${object.Key}`,
+    }))
+    return objects
   } catch (error) {
     console.error("Error listing S3 objects:", error)
-    return []
+    if (error instanceof Error) {
+      console.error("Error message:", error.message)
+      console.error("Error stack:", error.stack)
+    }
+    throw error
   }
 }
 

@@ -1,7 +1,23 @@
+'use client'
+
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { useEffect, useState } from 'react'
 
 export function Hero() {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  const handleExploreClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    const galleriesSection = document.getElementById('galleries')
+    if (galleriesSection) {
+      galleriesSection.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
   return (
     <section className="bg-background py-8 sm:py-16 lg:py-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -9,7 +25,7 @@ export function Hero() {
           <div className="relative w-full aspect-[3/4] sm:aspect-[4/3] lg:aspect-[3/4]">
             <Image
               src="/assets/cover-image.png"
-              alt="Olivia Frzop's featured photograph"
+              alt="Olivia Frzop's photograph"
               fill
               className="rounded-lg shadow-lg object-cover"
               priority
@@ -25,9 +41,13 @@ export function Hero() {
               }
             </p>
             <div className="mt-8">
-              <Button asChild>
-                <a href="#galleries">Explore Galleries</a>
-              </Button>
+              {isMounted && (
+                <Button asChild>
+                  <a href="#galleries" onClick={handleExploreClick}>
+                    Explore Galleries
+                  </a>
+                </Button>
+              )}
             </div>
           </div>
         </div>
